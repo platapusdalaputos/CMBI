@@ -59,15 +59,15 @@ for i=1:40
                  y1hodl(k) = CPA(k,j,i);
                  y2hodl(k) = PPA(k,j,i);
 
-             if k>39
+%              if k>39
                  transY1 = y1hodl';
                  transY2 = y2hodl';
 
                  tstat_value(k,j,i) = tstatt(transY1,transY2);
-                 if isnan(tstat_value(k,j,i))
-                     tstat_value(k,j,i)=0;
-                 end
-             end 
+%                  if isnan(tstat_value(k,j,i))
+%                      tstat_value(k,j,i)=0;
+%                  end
+%              end 
         end
     end    
 end 

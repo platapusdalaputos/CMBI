@@ -299,15 +299,22 @@ dimXe = rank(Xe);
 % different pvalues for ttest and ttest2
 
 
-% b.i)
+%% b.i)
+sample_size = 20;
+X_e = [repmat([1 0], sample_size,1);repmat([1 1], sample_size, 1)];
 
-% Produce design matrix of 
+X_2b = [X_e, [eye(sample_size);eye(sample_size)]];
+
+figure;
+imagesc(X_2b);
+
+%% Produce design matrix of 
 SI = fliplr(eye(40));
 
 % Append the old x0b
 X2a = [repmat([1 0],39,1); repmat([1 1],1,1)];
 
-designX = [X2a SI];
+designX = [X2a [eye(sample_size);eye(sample_size)]];
 
 % plot design matrix
 
@@ -315,93 +322,6 @@ figure(3);
 imagesc(designX);
 
 designX_Rank = rank(designX);
-
-
-
-
-%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%                             PART 2
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-% 1.a) Simulate a new dataset n1 = 6, n2 = 8
-
-% Initialising sample 1
-n1 = randn(6,1);
-
-% Initialising sample 2
-n2 = randn(8,1);
-
-
-[h_n,p_n,ci_n,stats_n] = ttest2(n1,n2);
-
-
-% b.i) 
-
-D = [n1;n2];
-
-% b.ii)
-
-%Compute all the permutations of D
-
-c1 = combnk(D(1:6),1);
-c2 = combnk(D(7:14),1);
-permuteD = combvec(c1',c2')';
-
-% compute the corresponding test statistics for each "group"
-% Produce ordered group
-
-% [H,PP,ci,sTatsg1] = ttest2(
-
-% for i=1:length(permuteD)
-%     
-%    [H,PP,ci,sTats] = ttest2(permuteD(i,1),permuteD(i,2));
-%     
-% end
-
-
-
-
-[H,PP,ci,sTats1] = ttest2(permuteD(1:6,1),permuteD(1:6,2));
-[H,PP,ci,sTats2] = ttest2(permuteD(7:13,1),permuteD(7:13,2));
-[H,PP,ci,sTats3] = ttest2(permuteD(14:20,1),permuteD(14:20,2));
-[H,PP,ci,sTats4] = ttest2(permuteD(21:27,1),permuteD(21:27,2));
-[H,PP,ci,sTats5] = ttest2(permuteD(28:34,1),permuteD(28:34,2));
-[H,PP,ci,sTats6] = ttest2(permuteD(35:41,1),permuteD(35:41,2));
-[H,PP,ci,sTats7] = ttest2(permuteD(42:48,1),permuteD(42:48,2));
-
-% J = extractfield(sTats,'tstat');
-%%
-    
-ggg = struct2cell(sTats1);
-fff = cell2mat(ggg);
-
-ggg1 = struct2cell(sTats2);
-fff1 = cell2mat(ggg1);
-
-ggg2 = struct2cell(sTats3);
-fff2 = cell2mat(ggg2);
-
-ggg3 = struct2cell(sTats4);
-fff3 = cell2mat(ggg3);
-
-ggg4 = struct2cell(sTats5);
-fff4 = cell2mat(ggg4);
-
-ggg5 = struct2cell(sTats6);
-fff5 = cell2mat(ggg5);
-
-ggg6 = struct2cell(sTats7);
-fff6 = cell2mat(ggg6);
-
-FF = [fff fff1 fff2 fff3 fff4 fff5 fff6];
-
-figure(3);
-histogram(FF,6);
 
 
 
