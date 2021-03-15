@@ -1,6 +1,6 @@
 %% Part 2
 
-%% 2.1
+%% 2.1a) Simulate data set
 
 % Initialise the stochastic component with std = 0.2 and mean = 0
 stan_d = 0.2;
@@ -15,140 +15,72 @@ n1 = stan_d.*randn(6,1) + mu_n1;
 % Initialising sample 2
 n2 = stan_d.*randn(8,1) + mu_n2;
 
-[h_n,p_n,ci_n,stats_n] = ttest2(n1,n2);
+[~,pval,~,stats] = ttest2(n2,n1);
+G = cell2mat(struct2cell(stats));
+tval = G(1,:);
 
-%% b.ii) 
+%% 2.1b.i) - 2.1b.iv)
 
-D = [n1;n2];
+% Construct 1D array
+D = [n2;n1];
 
-
-%% B.iii 
-
-% Find the combinations of groups of 6 or 8
-% To take in consideration n1 = 8 or n2 = 6
-% Then using set diff to find the values which aren't present
-
-
-% numerical values 1 to 14 to represent listing in D
-
-Dlist = 1:14;
-
-% All possible combination from 1:14 in groups of 8
-perM = combnk(Dlist, 8);
-
-% size of the amount of combinations
-Np = length(perM);
-
-% 
-perM2 = zeros(Np,6);
-ttestss = zeros(Np, 1);
-meanTtest = zeros(Np, 1);
+% all valid permutations
+[ttestt, meanT] = combiPerm(n2,n1);
 
 
-perMM = zeros(Np,6);
-
-for i = 1:Np
-    
-    perMM(i,:) = setdiff(Dlist, perM(i,:));
-    
-end
-
-D1 = D(perM);
-D2 = D(perMM);
-
-for i = 1:Np
-    
-     [~, ~, ~, stats]= ttest2(D1(i,:), D2(i,:));
-  
-     G = cell2mat(struct2cell(stats));
-     
-     ttestss(i) = G(1,:);
-     
-%      mean(D(L1:L1+5,1)) - mean(permuteD(L1:L1+5,2));
-        
-end 
-
-figure;
-histogram(ttestss);
-
-
-%% b.iii) compute the corresponding test statistics for each "group"
-
-% L=1;
-% hist = [];
-% 
-% for i=1:8
-%          
-%     [~, ~, ~, stats] = ttest2(permuteD(L:L+5,1),permuteD(L:L+5,2));
-%      G = cell2mat(struct2cell(stats));
-%      hist(i) = G(1,:);
-% 
-%      L=L+6;
-% 
-% end
-
-%% find the percentage of tstats greater than the original value
-
-orig = cell2mat(struct2cell(stats_n));
-tstat_orig = orig(1);
+% find the percentage of tstats greater than the original value
 
 k = 0;
 thresh =[];
-for i=1:length(hist)
-    J = hist(i);
-    if J >= tstat_orig
+for i=1:length(ttestt)
+    J = ttestt(i);
+    if J >= tval
         k=k+1;
         thresh(i) = J;
     end         
     
-    perc = k/length(hist)*100;
+    perc = k/length(ttestt);
 end
-%%
-% b.iv) plot histogram with original tstat value
 
+% plot the figure and display the p-values
 figure(1);
 
-histogram(hist);
-% hold on
-% histogram(thresh);
-hold on
-xline(tstat_orig,'--r');
-xlabel('tstat');
-title('tstat of permutated D values');
-legend('t-stat', 'p-value');
-%% c) Mean differences instead of tstat
+histogram(ttestt,100,'FaceColor',[0.8500 0.3250 0.0980]);
+xlabel('t-statistic');
+legend('t-statistic');
 
 
-L1=1;
-hist2 = [];
+%% c) Difference in means as test statistic
 
-for i=1:8
-         
-    hist2(i) = mean(permuteD(L1:L1+5,1)) - mean(permuteD(L1:L1+5,2));
+% estimating the pvalue
 
-     L1=L1+6;
+k = 0;
 
+for i=1:length(meanT)
+    J = meanT(i);
+    if J >= tval
+        k=k+1;
+    end             
+    perc_mT = k/length(meanT);
 end
+
+%
+% Plot the difference in means
 
 figure(2);
 
-histogram(hist2);
-% hold on
-% histogram(thresh);
-% hold on
-% xline(tstat_orig,'--r');
-xlabel('\mu_1 - \mu_2');
-title('difference between means');
-legend('\mu_1 - \mu_2', 'p-value');
+histogram(meanT,100,'FaceColor',[0 0.4470 0.7410]);
+xlabel('t-statistic (\mu_{permD} - \mu_{permD2})');
+legend('\mu_{permD} - \mu_{permD2}');
 
-%% d.i) 
+%% 2d.i) estimating p-value with tstat and 1000 permutation
 
 noOfperms = 1000;
 Dpermuted = zeros(length(D),noOfperms);
 histd =  zeros(1,noOfperms);
+
 for i =1:noOfperms
     
-%     permutediD = randperm(length(D));
     Dpermuted(:,i) = randperm(length(D));
     D1 = D(Dpermuted(1:6,i));
     D2 = D(Dpermuted(7:14,i));
@@ -156,171 +88,106 @@ for i =1:noOfperms
     [h1d, p1d, conf_d, stats_d] = ttest2(D1, D2);
      Gd = cell2mat(struct2cell(stats_d));
      histd(i) = Gd(1,:);
-%      histd(i) = mean(D) - mean(Dpermuted(:,i));
     
     
 end
-%%
+
+k = 0;
+thresh =[];
+for i=1:noOfperms
+    J = histd(i);
+    if J >= tval
+        k=k+1;
+    end         
+    
+    perc_iter = k/length(histd);
+end
+
 figure(3);
 
-histogram(histd,10);
+histogram(histd,100,'FaceColor',[0.9290 0.6940 0.1250]);
+hold on
+xlabel('t-statistic');
+legend('1000-permutations');
 
+%% 2d.iii Duplicates in permutations
 
-%% Q2 
+% finding the number of duplicates within the array histd
 
-% 2.a)
+counts=[];
+ c = unique(histd); % the unique values in histd  
+ for i = 1:length(c)
+   counts(i,1) = sum(histd==c(i)); % number of times each unique value is repeated
+ end
+ 
+duplicates = c(counts>1);
 
-% All the matching values
-
-% img1b = 'CPA5_diffeo_fa.img';
-% img1c = 'CPA6_diffeo_fa.img';
-% img1d = 'CPA7_diffeo_fa.img';
-% img1e = 'CPA8_diffeo_fa.img';
-% img1f = 'CPA9_diffeo_fa.img';
-% img1g = 'CPA10_diffeo_fa.img';
-% img1h = 'CPA11_diffeo_fa.img';
-
-% img2b = 'PPA6_diffeo_fa.img';
-% img2c = 'PPA9_diffeo_fa.img';
-% img2d = 'PPA10_diffeo_fa.img';
-% img2e = 'PPA13_diffeo_fa.img';
-% img2f = 'PPA14_diffeo_fa.img';
-% img2g = 'PPA15_diffeo_fa.img';
-% img2h = 'PPA16_diffeo_fa.img';
-
-% g1 = ["CPA4_diffeo_fa.img" "CPA5_diffeo_fa.img" "CPA6_diffeo_fa.img" "CPA7_diffeo_fa.img" "CPA8_diffeo_fa.img" "CPA9_diffeo_fa.img" "CPA10_diffeo_fa.img" "CPA11_diffeo_fa.img"];
-% g2 = ["PPA3_diffeo_fa.img" "PPA6_diffeo_fa.img" "PPA9_diffeo_fa.img" "PPA10_diffeo_fa.img" "PPA13_diffeo_fa.img" "PPA14_diffeo_fa.img" "PPA15_diffeo_fa.img" "PPA16_diffeo_fa.img"];
-% g3 =  ["PPA14_diffeo_fa.img" "PPA15_diffeo_fa.img" "PPA16_diffeo_fa.img"];
-
-
-
-
-% maxT1 = maxtstat(img1a,img1b,'wm_mask.img');
-% maxT2 = maxtstat(img2a,img2b,'wm_mask.img');
-
-%%  Q2 import and convert the files 
+%%  Q2.2a) import and convert the files 
 
 g1 = ["CPA4_diffeo_fa.img" "CPA5_diffeo_fa.img" "CPA6_diffeo_fa.img" "CPA7_diffeo_fa.img" "CPA8_diffeo_fa.img" "CPA9_diffeo_fa.img" "CPA10_diffeo_fa.img" "CPA11_diffeo_fa.img"];
 g2 = ["PPA3_diffeo_fa.img" "PPA6_diffeo_fa.img" "PPA9_diffeo_fa.img" "PPA10_diffeo_fa.img" "PPA13_diffeo_fa.img" "PPA14_diffeo_fa.img" "PPA15_diffeo_fa.img" "PPA16_diffeo_fa.img"];
 wm = 'wm_mask.img';
 
+[MaxStat, tstattt] = maxtstat(g1,g2,wm);
 
-MaxStat = maxtstat(g1,g2,wm);
-
-% data = zeros(40,40,40,8);
-% data1 = zeros(40,40,40,8);
-% 
-% N = length(g1);
-% 
-% for i = 1:N
-%     
-%     fid = fopen(g1(i), 'r', 'l'); % little-endian
-%     H = fread(fid, 'float'); % 16-bit floating point
-%     data(:,:,:,i) = reshape(H, [40 40 40]); % dimension 40x40x40
-%     
-%     fid1 = fopen(g2(i), 'r', 'l'); % little-endian
-%     H1 = fread(fid1, 'float'); % 16-bit floating point
-%     data1(:,:,:,i) = reshape(H1, [40 40 40]); % dimension 40x40x40
-%     
-% end
-% 
-% fid2 = fopen(wm, 'r', 'l'); % little-endian
-% data2 = fread(fid2, 'float'); % 16-bit floating point
-% wm_mask = reshape(data2, [40 40 40]); % dimension 40x40x40
-% 
-% 
-% 
-% 
-% %% CPA and PPA mapping
-% 
-% % Mapping the wm_mask onto the CPA and PPA images
-% 
-% CPA = data;
-% PPA = data1;
-% 
-% for l = 1:8
-%     for i=1:40
-%         for j=1:40
-%             for k=1:40 
-%                  if wm_mask(k,j,i) == 0
-% 
-%                      CPA(k,j,i,l) = 0;
-%                      PPA(k,j,i,l) = 0;
-%                      
-% 
-%                 end
-%             end
-%         end    
-%     end 
-% end
-% 
-% 
-% % Computing the tstat on every voxel
-% 
-% tstat_value = [];
-% ttest_tstat = [];
-% y1hodl = [];
-% y2hodl = [];
-% 
-% 
-% for i=1:40
-%     for j=1:40
-%         for k=1:40 
-%             for l =1:8
-% 
-% 
-%                  y1hodl(l) = CPA(k,j,i,l);
-%                  y2hodl(l) = PPA(k,j,i,l);
-% 
-% 
-%                  transY1 = y1hodl';
-%                  transY2 = y2hodl';
-% 
-%                  tstat_value(k,j,i) = tstatt(transY1,transY2);
-% 
-%                 
-%             end
-%         end
-%     end    
-% end 
+NewSimpleArray = tstattt(tstattt ~= 0);
 %%
 
-% NewSimpleArray = tstat_value(tstat_value ~= 0);
-% MaxTstat = max(NewSimpleArray);
-% 
-% % Z = find(~tstat_value);
-% % [x,~] = ind2sub(size(tstat_value),Z);
-% % tstat_value(x,:) = [];
-% 
-% %%
-% figure;
-% % if tstat
-% histogram(NewSimpleArray);
-% 
-% 
-% % tstattt = tstatt(transY1, transY2);
-% 
-% % Y = [transY1,transY2];
-% % % Design matrix
-% % 
-% % X = [repmat([0 0 1],40,1); repmat([0 1 0],40,1)];
-% % 
-% % % compute the projection of y onto the column space
-% %  
-% % XX = X'*X;
-% % PX = (X*pinv(XX))*X' ;
+figure(4);
+histogram(NewSimpleArray,100);
+hold on
+xline(MaxStat,'--r');
+xlabel('t-statistic');
+legend('t-statistic', 'Max Tstat');
 
+%% 2.2b)
 
-%% 2B
-
-% Find the combinations of groups of 6 or 8
-% To take in consideration n1 = 8 or n2 = 6
-% Then using set diff to find the values which aren't present
-
+D = [g1';g2'];
 
 % numerical values 1 to 14 to represent listing in D
 
-Dlist = 1:14;
+Dlist = 1:length(D);
+
+% All possible combination from 1:16 in groups of 8
+perM = combnk(Dlist, length(g1));
+perM2 = zeros(length(perM),length(g2));
+
+ttestss = zeros(length(perM), 1);
+
+% Calculating the values in Dlist which are not in perM
+
+for i = 1:length(perM)
+    
+    perM2(i,:) = setdiff(Dlist, perM(i,:));
+    
+end
+
+% Mapping the permutation onto the actual values of the 
+
+permD = D(perM);
+permD2 = D(perM2);
+
+
+%% 
+statistics = [];
+
+for i = 1:length(permD)
+    
+    w1 = permD(i,:);
+    w2 = permD2(i,:);
+    
+    [statistics(i),~] = maxtstat(w1,w2,wm);
+%     [A(:,:,i), B(:,:,i)] = convertImage(w1,w2,wm);
+    
+    
+end 
+%%
+
+figure;
+
+histogram(statistics,100);
+
+%% Dlist = 1:14;
 
 % All possible combination from 1:14 in groups of 8
 perM = combnk(Dlist, 8);

@@ -29,7 +29,7 @@ Y = [s2;s1];
 rng(20206994);
 
 % Calculation of the stochastic component for twenty samples
-E = stan_d.*randn(SL,1) + mu;
+E = stan_d.*randn(40,1) + mu;
 
 
 
@@ -225,6 +225,10 @@ t = (Cc'* Beta)/(sqrt(Cc'*S_beta*Cc));
 % axis off
 % colorbar
 % title('PX0')
+%%
+E = stan_d.*randn(40,1) + mu;
+
+err = PX*E;
 
 
 
@@ -275,7 +279,7 @@ variance_d = (e_hat_d'*e_hat_d)/(40-2);
 
 %Estimated covariance matrix
 S_beta_d = variance*pinv(XdXd);
-
+-6.
 % Calculate t-statistic
 td = (Cd'* Beta_d)/(sqrt(Cd'*S_beta_d*Cd));
 

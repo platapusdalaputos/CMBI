@@ -1,4 +1,6 @@
-function M = maxtstat(g1,g2,wm)
+%% Function for calculating the maxtstat
+
+function [M, tstat_value] = maxtstat(g1,g2,wm)
 
 data = zeros(40,40,40,8);
 data1 = zeros(40,40,40,8);
@@ -21,9 +23,6 @@ fid2 = fopen(wm, 'r', 'l'); % little-endian
 data2 = fread(fid2, 'float'); % 16-bit floating point
 wm_mask = reshape(data2, [40 40 40]); % dimension 40x40x40
 
-
-
-
 % CPA and PPA mapping
 
 % Mapping the wm_mask onto the CPA and PPA images
@@ -38,8 +37,7 @@ for l = 1:8
                  if wm_mask(k,j,i) == 0
 
                      CPA(k,j,i,l) = 0;
-                     PPA(k,j,i,l) = 0;
-                     
+                     PPA(k,j,i,l) = 0;                     
 
                 end
             end
@@ -47,31 +45,37 @@ for l = 1:8
     end 
 end
 
-
 % Computing the tstat on every voxel
 
 tstat_value = [];
 ttest_tstat = [];
+ttestss = [];
 y1hodl = [];
 y2hodl = [];
+comi = [];
 
 
 for i=1:40
     for j=1:40
         for k=1:40 
             for l =1:8
-
-
+                if CPA(k,j,i,l) && PPA(k,j,i,l)~=0
+               
                  y1hodl(l) = CPA(k,j,i,l);
                  y2hodl(l) = PPA(k,j,i,l);
-
 
                  transY1 = y1hodl';
                  transY2 = y2hodl';
 
                  tstat_value(k,j,i) = tstatt(transY1,transY2);
+%                  [~, ~, ~, stats] = ttest2(transY1,transY2);
+%                                   
+%                  G = cell2mat(struct2cell(stats));
+% 
+%                  ttestss(k,j,i) = G(1,:);
 
-                
+%                  combi(k,j,i) = combiPerm(transY1,transY2);
+                end
             end
         end
     end    
@@ -79,5 +83,5 @@ end
 
 
 M = max(tstat_value,[],'all');
-
+% M = max(ttestss,[],'all');
 end
