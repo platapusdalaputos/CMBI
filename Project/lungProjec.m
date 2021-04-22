@@ -1,5 +1,7 @@
 n = length(images);
 
+iM = 600; % the number of training images
+
 landmark = load("landmark_pos_phys.mat");
 landmark_pos = landmark.landmark_pos_phys;
 
@@ -82,21 +84,21 @@ for k = 1:n
 end
 
 figure;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),':')
+plot(x_20(1:iM),SI_deform_CP_44_38(1:iM),':')
 hold on;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),'bx')
+plot(x_20(1:iM),SI_deform_CP_44_38(1:iM),'bx')
 ylim([30,55])
 
-Y_train = SI_deform_CP_44_38(1:100);
-X_linear = [ones(length(x_20(1:100)),1),x_20(1:100)];
+Y_train = SI_deform_CP_44_38(1:iM);
+X_linear = [ones(length(x_20(1:iM)),1),x_20(1:iM)];
 Y_linear = X_linear*inv(X_linear'*X_linear)*X_linear'*Y_train;
 
 figure;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),':')
+plot(x_20(1:iM),SI_deform_CP_44_38(1:iM),':')
 hold on;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),'bx');
+plot(x_20(1:iM),SI_deform_CP_44_38(1:iM),'bx');
 hold on;
-plot(x_20(1:100),Y_linear,'r-');
+plot(x_20(1:iM),Y_linear,'r-');
 ylim([30,55])
 xlabel("surrogate value")
 ylabel("control-point value")
@@ -110,9 +112,9 @@ hold off
 % It is divided into four sections horizontal concatenated:
 % CP Region 1 AP - CP Region 1 SI - CP Region 2 AP - CP Region 2 SI
 
-Y_train_mat = zeros(100,67*67*4);
+Y_train_mat = zeros(iM,67*67*4);
 
-for i=1:100
+for i=1:iM
     Y_train_mat(i,:) = [reshape(cpg1(i).img(:,:,1,1,1), [1,67*67]), ...
                         reshape(cpg1(i).img(:,:,1,1,2), [1,67*67]), ...
                         reshape(cpg2(i).img(:,:,1,1,1), [1,67*67]), ...
@@ -120,17 +122,17 @@ for i=1:100
 end
 
 % Linear model
-S_lin = [x_20(1:100),ones(length(x_20(1:100)),1)];
+S_lin = [x_20(1:iM),ones(length(x_20(1:iM)),1)];
 C = S_lin\Y_train_mat;
 %%
 B = pinv(S_lin);
 
 % Polynomial of 2nd order
-S_p2 = [x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+S_p2 = [x_20(1:iM).^2,x_20(1:iM),ones(length(x_20(1:iM)),1)];
 C_p2 = S_p2\Y_train_mat;
 
 % Polynomial of 3rd order
-S_p3 = [x_20(1:100).^3, x_20(1:100).^2,x_20(1:100),ones(length(x_20(1:100)),1)];
+S_p3 = [x_20(1:iM).^3, x_20(1:iM).^2,x_20(1:iM),ones(length(x_20(1:iM)),1)];
 C_p3 = S_p3\Y_train_mat;
 
 %% Get CP 44-38 and plot it
@@ -147,11 +149,11 @@ C_p3_44_38 = C_p3_reg1_SI(:,44,38);
 
 %% Print the estimated models at CP 44-38
 figure;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),':')
+plot(x_20(1:iM),SI_deform_CP_44_38(1:iM),':')
 hold on;
-plot(x_20(1:100),SI_deform_CP_44_38(1:100),'bx');
+plot(x_20(1:iM),SI_deform_CP_44_38(1:iM),'bx');
 hold on;
-plot(x_20(1:100),S_lin*C_44_38,'r-');
+plot(x_20(1:iM),S_lin*C_44_38,'r-');
 hold on
 [sorted_p2,ind] = sort(S_p2*C_p2_44_38,'descend');
 plot(x_20(ind), sorted_p2,'g-');
