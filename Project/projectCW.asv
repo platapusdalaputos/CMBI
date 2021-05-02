@@ -1,0 +1,91 @@
+% Pre-requisites
+
+% Signed Distance Map Segmentation = SDMS
+SDMS = load_untouch_nii('0007_sdt.nii.gz');
+
+% Source mask
+source_mask = load_untouch_nii('0007_mask.nii.gz');
+
+% Source image
+source_image = load_untouch_nii('0007.nii.gz');
+
+n = length(images);
+
+iM_mean = [];
+iM_mean2= [];
+iM_mean3= [];
+
+iM = [n/15, n/5, n/2.5, n/1.5]; % the number of training images
+
+
+% %% Producing inhalation and exhalation images
+% 
+% for i = 1:1499
+%     
+%     if isnan(inhalation(i)')
+%         x_30(i) = NaN;
+%         
+%     end
+% 
+% end
+% 
+% x_30_inhale = x_30;
+%% 
+
+
+
+%% Plotting the relavent information to extract the mean DFE
+
+
+for ii = 1:4
+    
+
+        
+    iTest = iM(ii)+1; % Testing image start
+
+    iLim = 1500-iM(ii); % The limit to the testing images
+
+
+    [x_20, x_30, inhalation,inhale, exhalation,exhale,SI_deform_CP_44_38,S_lin,C,S_p2,S_p3,C_p2,C_p3, S_lin_up,C_up,S_p2_up,S_p3_up,C_p2_up,C_p3_up ] = surrogateSig(images, iM(ii), cpg1, cpg2);
+
+
+    % Plot ALL the models with the specific surrogate signal given
+
+
+    %plotPolyModels(iM(ii), x_20, C, C_p2, C_p3, S_p2, S_p3, SI_deform_CP_44_38, S_lin,'x_20')
+
+    plotPolyModels(iM(ii), x_30_inhale, C_up, C_p2_up, C_p3_up, S_p2_up, S_p3_up, SI_deform_CP_44_38, S_lin_up,'x_30_inhale')
+
+
+    % Retrieve the relevant transformation in order to make the DEFs
+
+    %[cpg1_lin, cpg2_lin, cpg1_p2, cpg2_p2, cpg1_p3, cpg2_p3] = cpgRetrieve(iLim,iTest,cpg1,cpg2, x_20, C, C_p2, C_p3);
+
+    [cpg1_lin, cpg2_lin, cpg1_p2, cpg2_p2, cpg1_p3, cpg2_p3] = cpgRetrieve(iLim,iTest,cpg1,cpg2, x_30_inhale, C_up, C_p2_up, C_p3_up);
+    
+    
+
+
+
+    % producing the mean DFE for the different models
+    iM_mean(ii) = secondPoly(iM(ii),cpg1_lin, cpg2_lin, images,rDSMI,regIm_def);
+    iM_mean2(ii) = secondPoly(iM(ii),cpg1_p2, cpg2_p2, images,rDSMI,regIm_def);
+    iM_mean3(ii) = secondPoly(iM(ii),cpg1_p3, cpg2_p3, images,rDSMI,regIm_def);
+
+
+
+end
+%% Plotting the mean figure values
+
+
+x = [100, 300, 600, 1000]; % Values used for training the model
+figure;
+plot(x,iM_mean,'-s','LineWidth',3)
+hold on
+plot(x,iM_mean2,'-s','LineWidth',3)
+hold on
+plot(x,iM_mean3,'-s','LineWidth',3)
+legend('Linear','Poly 2^{nd}','Poly 3^{rd}')
+xlabel('Training set, (No of images)','FontSize', 16)
+ylabel('Average L2 norm, (\mu)','FontSize', 16)
+title('x30 inhalation');
